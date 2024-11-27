@@ -1,4 +1,6 @@
 #include "MergeSort.h"
+#include <thread> // Include the thread library
+#include <vector>
 
 void MergeSort::sort(std::vector<int>& array) {
     if (array.size() <= 1) {
@@ -13,8 +15,22 @@ void MergeSort::mergeSort(std::vector<int>& array, std::vector<int>& temp, int l
         return; // Base case
     }
     int middle = (leftStart + rightEnd) / 2;
-    mergeSort(array, temp, leftStart, middle); // Sort left half
-    mergeSort(array, temp, middle + 1, rightEnd); // Sort right half
+
+    // Check if the size of the current segment is below the threshold
+    if ((rightEnd - leftStart) < THRESHOLD) {
+        // Use single-threaded sort for small arrays
+        mergeSort(array, temp, leftStart, middle);
+        mergeSort(array, temp, middle + 1, rightEnd);
+    } else {
+        // Create threads for larger arrays
+        std::thread leftThread(&MergeSort::mergeSort, this, std::ref(array), std::ref(temp), leftStart, middle);
+        std::thread rightThread(&MergeSort::mergeSort, this, std::ref(array), std::ref(temp), middle + 1, rightEnd);
+
+        // Wait for both threads to finish
+        leftThread.join();
+        rightThread.join();
+    }
+
     merge(array, temp, leftStart, middle, rightEnd); // Merge sorted halves
 }
 

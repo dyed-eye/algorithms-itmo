@@ -2,13 +2,13 @@
 #include <vector>
 #include <string>
 #include <algorithm>
-#include <chrono>
+#include <chrono> // Include the chrono library
 #include "DataGenerator.h"
-#include "MergeSort.h"
+#include "HeapSort.h"
 
 int main() {
     DataGenerator dataGen;
-    MergeSort mergeSort;
+    HeapSort heapSort;
 
     const int numFiles = 10;
     const int numNumbers = 10000;
@@ -28,8 +28,8 @@ int main() {
     // Start timing the sorting execution
     auto start = std::chrono::high_resolution_clock::now();
 
-    // Sort all numbers
-    mergeSort.sort(allNumbers);
+    // Sort all numbers using Heap Sort
+    heapSort.sort(allNumbers);
 
     // Stop timing the sorting execution
     auto end = std::chrono::high_resolution_clock::now();
