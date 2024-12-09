@@ -28,6 +28,8 @@ def simulate_traffic(G, num_cars, peak_hours):
                         reverse_edge = (path[i + 1], path[i])
                         if reverse_edge in traffic_data:
                             traffic_data[reverse_edge] += 1
+                            
+        adaptive_traffic_signals(G, traffic_data, t)                            
 
         for edge in G.edges():
             num_cars = traffic_data[edge]
@@ -51,3 +53,17 @@ def calculate_congestion(G, traffic_data, high_congestion_duration):
 
 def identify_top_congested(congestion_info):
     return sorted(congestion_info, key=lambda x: x[2], reverse=True)[:10]
+    
+def adaptive_traffic_signals(G, traffic_data, t):
+    # Adjust green light duration based on traffic conditions at intersections
+    for node in G.nodes():
+        # Get all edges connected to the node
+        connected_edges = G.edges(node)
+        total_cars = sum(traffic_data.get(edge, 0) for edge in connected_edges)  # Use get to avoid KeyError
+        
+        # Example logic: If total cars are above a threshold, increase green light duration
+        if total_cars > 5:  # Arbitrary threshold for demonstration
+            # Increase green light duration (this is a placeholder for actual signal control logic)
+            print(f"{t//6}:{t%6}0|| Node {node}: Increase green light duration due to {total_cars} cars waiting.")
+        else:
+            ... #print(f"Node {node}: Normal green light duration.")
