@@ -1,35 +1,52 @@
 import networkx as nx
 import random
 
-
 def simulate_traffic(G, num_cars, peak_hours):
     traffic_data = {edge: 0 for edge in G.edges()}
-    for _ in range(num_cars):
-        start = random.choice(list(G.nodes()))
-        end = random.choice(list(G.nodes()))
-        if start != end:
-            path = nx.shortest_path(G, source=start, target=end)
-            for i in range(len(path) - 1):
-                edge = (path[i], path[i + 1])
-                # Ensure the edge exists in traffic_data
-                if edge in traffic_data:
-                    traffic_data[edge] += 1
-                else:
-                    # If the graph is undirected, check the reverse edge
-                    reverse_edge = (path[i + 1], path[i])
-                    if reverse_edge in traffic_data:
-                        traffic_data[reverse_edge] += 1
-                    else:
-                        print(f"Warning: Edge {edge} not found in traffic_data.")
-    return traffic_data
+    high_congestion_duration = {edge: 0 for edge in G.edges()}
+    congestion_threshold = 0.9  # 90% congestion
+    time_steps = 144  # 24 hours with 10-minute intervals (24 * 6 = 144)
 
-def calculate_congestion(G, traffic_data):
+    for t in range(time_steps):
+        # Determine the number of cars based on the time of day
+        hour = t // 6  # Each time step represents 10 minutes, so 6 steps per hour
+        if hour in peak_hours:
+            current_num_cars = int(num_cars * 1.8)
+        else:
+            current_num_cars = num_cars
+
+        for _ in range(current_num_cars):
+            start = random.choice(list(G.nodes()))
+            end = random.choice(list(G.nodes()))
+            if start != end:
+                path = nx.shortest_path(G, source=start, target=end)  # Generate routes
+                for i in range(len(path) - 1):
+                    edge = (path[i], path[i + 1])
+                    if edge in traffic_data:
+                        traffic_data[edge] += 1
+                    else:
+                        reverse_edge = (path[i + 1], path[i])
+                        if reverse_edge in traffic_data:
+                            traffic_data[reverse_edge] += 1
+
+        for edge in G.edges():
+            num_cars = traffic_data[edge]
+            capacity = G[edge[0]][edge[1]].get('capacity', 10)  # Default capacity
+            congestion_percentage = (num_cars / capacity) if capacity > 0 else 0
+            
+            if congestion_percentage > congestion_threshold:
+                high_congestion_duration[edge] += 1
+
+    return traffic_data, high_congestion_duration
+
+def calculate_congestion(G, traffic_data, high_congestion_duration):
     congestion_info = []
-    for edge in G.edges(data=True):
-        num_cars = traffic_data[edge[:2]]
-        capacity = edge[2].get('capacity', 10)  # Default capacity if not set
+    for edge in G.edges():
+        num_cars = traffic_data[edge]
+        capacity = G[edge[0]][edge[1]].get('capacity', 10)  # Correctly access capacity
         congestion_percentage = (num_cars / capacity) * 100 if capacity > 0 else 0
-        congestion_info.append((edge[:2], num_cars, congestion_percentage))
+        duration_high_congestion = high_congestion_duration[edge]  # Get duration of high congestion
+        congestion_info.append((edge, num_cars, congestion_percentage, duration_high_congestion))
     return congestion_info
 
 def identify_top_congested(congestion_info):
