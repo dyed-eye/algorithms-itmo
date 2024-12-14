@@ -1,5 +1,4 @@
 import time
-import random
 from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor
 import asyncio
 
@@ -17,15 +16,19 @@ def process_action(action_time, cpu_load):
 
 def sequential_processing():
     print("Starting sequential processing...")
+    start_time = time.time()
     for _ in range(U1):
         process_action(T1, load1)
     for _ in range(U2):
         process_action(T2, load2)
     for _ in range(U3):
         process_action(T3, load3)
+    end_time = time.time()
+    print(f"Total time for sequential processing: {end_time - start_time:.2f} seconds")
 
 def thread_processing():
     print("Starting thread processing...")
+    start_time = time.time()
     with ThreadPoolExecutor(max_workers=4) as executor:
         futures = []
         for _ in range(U1):
@@ -36,9 +39,12 @@ def thread_processing():
             futures.append(executor.submit(process_action, T3, load3))
         for future in futures:
             future.result()
+    end_time = time.time()
+    print(f"Total time for thread processing: {end_time - start_time:.2f} seconds")
 
 def subprocess_processing():
     print("Starting subprocess processing...")
+    start_time = time.time()
     with ProcessPoolExecutor(max_workers=4) as executor:
         futures = []
         for _ in range(U1):
@@ -49,6 +55,8 @@ def subprocess_processing():
             futures.append(executor.submit(process_action, T3, load3))
         for future in futures:
             future.result()
+    end_time = time.time()
+    print(f"Total time for subprocess processing: {end_time - start_time:.2f} seconds")
 
 async def async_process_action(action_time, cpu_load):
     await asyncio.sleep(action_time)
@@ -56,6 +64,7 @@ async def async_process_action(action_time, cpu_load):
 
 async def async_processing():
     print("Starting asynchronous processing...")
+    start_time = time.time()
     tasks = []
     for _ in range(U1):
         tasks.append(async_process_action(T1, load1))
@@ -64,6 +73,8 @@ async def async_processing():
     for _ in range(U3):
         tasks.append(async_process_action(T3, load3))
     await asyncio.gather(*tasks)
+    end_time = time.time()
+    print(f"Total time for asynchronous processing: {end_time - start_time:.2f} seconds")
 
 def main():
     print("=== Sequential Processing ===")
@@ -80,4 +91,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
